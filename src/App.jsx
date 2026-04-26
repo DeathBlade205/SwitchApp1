@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Loader from './Loader'
 import HeroCanvas from './HeroCanvas'
 import SwitchCanvas from './SwitchCanvas'
+import SwitchIllustration from './SwitchIllustration'
 import './index.css'
 
 export default function App() {
@@ -123,8 +124,8 @@ export default function App() {
               {SWITCHES.map((sw, i) => (
                 <div className="prod-card reveal" key={i}>
                   {sw.badge && <div className="prod-badge">{sw.badge}</div>}
-                  <div className="prod-canvas-wrap">
-                    <SwitchCanvas variant={sw.variant} bg={sw.bg} spin={0.45} />
+                  <div className="prod-canvas-wrap" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"2.5rem",background:"#2c3a3f"}}>
+                    <SwitchIllustration variant={sw.variant} darkBg={true} />
                   </div>
                   <div className="prod-body">
                     <h3 className="prod-name">{sw.name}</h3>
@@ -172,7 +173,7 @@ export default function App() {
         <section id="specs" className="specs-section">
           <div className="specs-inner">
             <div className="specs-canvas-wrap reveal">
-              <SwitchCanvas variant="tactile" bg={0xede9e2} spin={0.3} />
+              <SwitchIllustration variant="tactile" size={420} darkBg={false} />
             </div>
             <div className="specs-content">
               <span className="sec-label reveal">Full Specifications</span>
