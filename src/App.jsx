@@ -3,7 +3,7 @@ import Loader from './Loader'
 import HeroCanvas from './HeroCanvas'
 import SwitchCanvas from './SwitchCanvas'
 import SwitchIllustration from './SwitchIllustration'
-import { setupScrollAnimations } from './scrollAnimations'
+import { setupScrollAnimations } from './ScrollAnimations'
 import './index.css'
 
 export default function App() {
