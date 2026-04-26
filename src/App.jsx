@@ -3,6 +3,7 @@ import Loader from './Loader'
 import HeroCanvas from './HeroCanvas'
 import SwitchCanvas from './SwitchCanvas'
 import SwitchIllustration from './SwitchIllustration'
+import { setupScrollAnimations } from './scrollAnimations'
 import './index.css'
 
 export default function App() {
@@ -35,7 +36,11 @@ export default function App() {
       { threshold: 0.08 }
     )
     els.forEach(el => obs.observe(el))
-    return () => obs.disconnect()
+
+    // Set up GSAP scroll animations after a short delay for layout to settle
+    const t = setTimeout(() => setupScrollAnimations(), 200)
+
+    return () => { obs.disconnect(); clearTimeout(t) }
   }, [siteVisible])
 
   return (
@@ -57,7 +62,8 @@ export default function App() {
           <button className="nav-cta">Explore Switches</button>
         </nav>
 
-        {/* HERO */}
+        {/* HERO — pinned for scroll-driven switch explode */}
+        <div className="hero-pin-wrap">
         <section className="hero">
           <HeroCanvas />
           <div className="hero-inner">
@@ -105,6 +111,8 @@ export default function App() {
           </div>
           <div className="hero-bleed">NEXUS</div>
         </section>
+        </div>
+        {/* End hero pin wrapper */}
 
         {/* COLLECTION */}
         <section id="collection">
@@ -124,7 +132,7 @@ export default function App() {
               {SWITCHES.map((sw, i) => (
                 <div className="prod-card reveal" key={i}>
                   {sw.badge && <div className="prod-badge">{sw.badge}</div>}
-                  <div className="prod-canvas-wrap" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"2.5rem",background:"#2c3a3f"}}>
+                  <div className="prod-canvas-wrap" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"2.5rem",background:"#2e3d45"}}>
                     <SwitchIllustration variant={sw.variant} darkBg={true} />
                   </div>
                   <div className="prod-body">

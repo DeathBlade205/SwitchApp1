@@ -2,35 +2,94 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-// Parts ordered bottom→top, matching GLB geometry names
+// 5-part anatomy (3 CAD + 2 synthetic), bottom→top
 const PARTS = [
-  { name: 'bottom_case',     label: 'PA66 Bottom Case',              explodeY: -0.52, color: 0x8bb8d0, rough: 0.55, metal: 0.02 },
-  { name: 'spring_contacts', label: 'Spring & Gold Reeds',           explodeY: -0.18, color: 0xc8b060, rough: 0.2,  metal: 0.7  },
-  { name: 'upper_case',      label: 'PC Upper Case',                  explodeY:  0.2,  color: 0x8bb8d0, rough: 0.45, metal: 0.02 },
-  { name: 'stem',            label: 'POK Stem',                       explodeY:  0.62, color: 0x6aa8c8, rough: 0.35, metal: 0.05 },
+  { id: 'bottom',  label: 'PA66 Bottom Case',                     explodeY: -1.05, source: 'cad' },
+  { id: 'spring',  label: 'Spring',                                explodeY: -0.45, source: 'synthetic' },
+  { id: 'contact', label: 'Alloy Copper & Palladium Gold Reeds',   explodeY: -0.25, source: 'synthetic' },
+  { id: 'upper',   label: 'PC Upper Housing',                      explodeY:  0.35, source: 'cad' },
+  { id: 'stem',    label: 'POK Stem',                              explodeY:  1.05, source: 'cad' },
 ]
 
-const ACCENT = {
-  hero:    [0xb8985a, 0xb8985a, 0x8bb8d0, 0x6aa8c8],
-  linear:  [0x2a4a6a, 0xc8b060, 0x2a4a6a, 0xc94040],
-  tactile: [0x2a4a6a, 0xc8b060, 0x2a4a6a, 0x4a7ab8],
-  clicky:  [0x2a4a6a, 0xc8b060, 0x2a4a6a, 0x4a9e6a],
+const COLORS = {
+  bottom:  0x1a2638,
+  spring:  0xc8b878,
+  contact: 0xd4a64a,
+  upper:   0x6aaec8,
+  stem:    0xb8985a,
 }
 
-let partsPromise = null
+const STEM_OVERRIDE = { hero: 0xb8985a, linear: 0xc94040, tactile: 0x4a7ab8, clicky: 0x4a9e6a }
+
+let cached = null
 function loadParts() {
-  if (!partsPromise) {
-    partsPromise = new Promise((resolve, reject) =>
-      new GLTFLoader().load('/switch_parts.glb', resolve, undefined, reject)
-    )
-  }
-  return partsPromise
+  if (!cached) cached = new Promise((res, rej) =>
+    new GLTFLoader().load('/switch_parts.glb', res, undefined, rej)
+  )
+  return cached
 }
 
-const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2
-const easeOut   = t => 1 - Math.pow(1-t,3)
+const easeInOut = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2
 
-export default function SwitchCanvas({ variant = 'hero', bg = 0xede9e2, spin = 0.4 }) {
+// ── Synthetic spring (helix tube) — matches reference proportions ──
+function makeSpring() {
+  const g = new THREE.Group()
+  const radius = 0.18, height = 0.75, coils = 9
+  const segs = coils * 28
+  const points = []
+  for (let i = 0; i <= segs; i++) {
+    const t = i / segs
+    const a = t * coils * Math.PI * 2
+    points.push(new THREE.Vector3(
+      Math.cos(a) * radius,
+      -height/2 + t * height,
+      Math.sin(a) * radius
+    ))
+  }
+  const curve = new THREE.CatmullRomCurve3(points)
+  const tube = new THREE.TubeGeometry(curve, segs, 0.024, 10, false)
+  const mat = new THREE.MeshStandardMaterial({
+    color: COLORS.spring, roughness: 0.22, metalness: 0.9
+  })
+  const mesh = new THREE.Mesh(tube, mat)
+  mesh.castShadow = true; mesh.receiveShadow = true
+  g.add(mesh)
+  return g
+}
+
+// ── Synthetic contact leaf — bent metal bracket like Akko/Gateron reference ──
+function makeContact() {
+  const g = new THREE.Group()
+  const mat = new THREE.MeshStandardMaterial({
+    color: COLORS.contact, roughness: 0.18, metalness: 0.9
+  })
+  // Main vertical body (the wide flat leaf)
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.48, 0.04), mat)
+  body.position.set(0, 0, 0)
+  g.add(body)
+  // Top bent contact tab (the gold flag at top)
+  const tab = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.04), mat)
+  tab.position.set(0.05, 0.3, 0.06)
+  tab.rotation.x = -0.5
+  g.add(tab)
+  // Lower extension foot
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.04), mat)
+  foot.position.set(-0.06, -0.2, 0.04)
+  foot.rotation.z = 0.3
+  g.add(foot)
+  // Pin going down through case
+  const pin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.05), mat)
+  pin.position.set(0, -0.34, 0)
+  g.add(pin)
+  // Side pin (the second gold pin you see in reference)
+  const pin2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.04), mat)
+  pin2.position.set(-0.12, -0.32, 0)
+  g.add(pin2)
+  g.children.forEach(m => { m.castShadow = true; m.receiveShadow = true })
+  return g
+}
+
+export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0.3 }) {
   const canvasRef = useRef(null)
   const alive = useRef(true)
 
@@ -41,8 +100,8 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xede9e2, spin = 0
     let raf, renderer
 
     const init = async () => {
-      const w = canvas.offsetWidth || 400
-      const h = canvas.offsetHeight || 400
+      const w = canvas.offsetWidth || 500
+      const h = canvas.offsetHeight || 500
 
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
       renderer.setSize(w, h, false)
@@ -52,205 +111,197 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xede9e2, spin = 0
       renderer.shadowMap.type = THREE.PCFSoftShadowMap
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.toneMapping = THREE.ACESFilmicToneMapping
-      renderer.toneMappingExposure = 1.1
+      renderer.toneMappingExposure = 1.2
 
       const scene = new THREE.Scene()
-      const camera = new THREE.PerspectiveCamera(36, w / h, 0.1, 50)
-      camera.position.set(0, 0.15, 4.2)
-      camera.lookAt(0, 0, 0)
+
+      const camera = new THREE.PerspectiveCamera(28, w / h, 0.1, 50)
+      camera.position.set(1.5, 1.0, 6.4)
+      camera.lookAt(0, 0.05, 0)
 
       // Studio lighting
-      scene.add(new THREE.AmbientLight(0xffffff, 0.6))
-      const key = new THREE.DirectionalLight(0xffffff, 2.0)
-      key.position.set(3, 6, 4); key.castShadow = true
-      key.shadow.mapSize.set(1024, 1024); scene.add(key)
-      const fill = new THREE.DirectionalLight(0xd4c090, 0.6)
-      fill.position.set(-4, 1, 2); scene.add(fill)
-      const rim = new THREE.DirectionalLight(0xffffff, 0.9)
-      rim.position.set(0, -2, -3); scene.add(rim)
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55))
+      const key = new THREE.DirectionalLight(0xffffff, 2.5)
+      key.position.set(4, 8, 5); key.castShadow = true
+      key.shadow.mapSize.set(2048, 2048); scene.add(key)
+      const fill = new THREE.DirectionalLight(0xdde8f0, 1.0)
+      fill.position.set(-5, 1, 3); scene.add(fill)
+      const rim = new THREE.DirectionalLight(0xffffff, 0.7)
+      rim.position.set(0, -3, -4); scene.add(rim)
 
-      const accentColors = ACCENT[variant] || ACCENT.hero
+      const sp = new THREE.Mesh(
+        new THREE.PlaneGeometry(14, 14),
+        new THREE.ShadowMaterial({ opacity: 0.09 })
+      )
+      sp.rotation.x = -Math.PI / 2
+      sp.position.y = -2.0
+      sp.receiveShadow = true
+      scene.add(sp)
 
-      // Root group that rotates
       const root = new THREE.Group()
       scene.add(root)
-
-      // Per-part groups (inside root)
-      const partGroups = PARTS.map((p, i) => {
+      const partGroups = {}
+      PARTS.forEach(p => {
         const g = new THREE.Group()
-        g.userData = { ...p, accentColor: accentColors[i] }
+        g.name = p.id
         root.add(g)
-        return g
+        partGroups[p.id] = g
       })
 
-      // Labels (HTML overlay)
-      let labelEls = []
-      const labelContainer = document.createElement('div')
-      labelContainer.style.cssText = `position:absolute;inset:0;pointer-events:none;overflow:hidden;`
-      canvas.parentElement.style.position = 'relative'
-      canvas.parentElement.appendChild(labelContainer)
+      // Label overlay
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;'
+      const wrap = canvas.parentElement
+      if (wrap) { wrap.style.position = 'relative'; wrap.appendChild(overlay) }
 
-      PARTS.forEach((p, i) => {
-        const wrap = document.createElement('div')
-        wrap.style.cssText = `
-          position:absolute;display:flex;align-items:center;gap:8px;
-          opacity:0;transition:opacity 0.4s ease;pointer-events:none;
-          left:0;top:0;transform:translate(0,0);
-        `
+      const labelEls = {}
+      PARTS.forEach(p => {
+        const el = document.createElement('div')
+        el.style.cssText = `position:absolute;display:flex;align-items:center;gap:8px;
+          opacity:0;transition:opacity 0.4s ease;`
         const line = document.createElement('div')
-        line.style.cssText = `width:28px;height:1px;background:rgba(28,25,23,0.4);flex-shrink:0;`
-        const text = document.createElement('span')
-        text.style.cssText = `
-          font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.1em;
-          text-transform:uppercase;color:rgba(28,25,23,0.55);white-space:nowrap;
-        `
-        text.textContent = p.label
-        wrap.appendChild(line)
-        wrap.appendChild(text)
-        labelContainer.appendChild(wrap)
-        labelEls.push(wrap)
+        line.style.cssText = 'width:36px;height:1px;background:rgba(28,25,23,0.4);flex-shrink:0;'
+        const txt = document.createElement('span')
+        txt.style.cssText = `font-family:'DM Mono',monospace;font-size:.55rem;
+          letter-spacing:.14em;text-transform:uppercase;color:rgba(28,25,23,0.65);
+          white-space:nowrap;`
+        txt.textContent = p.label
+        el.appendChild(line); el.appendChild(txt)
+        overlay.appendChild(el)
+        labelEls[p.id] = el
       })
+
+      const stemColor = STEM_OVERRIDE[variant] || STEM_OVERRIDE.hero
 
       try {
         const gltf = await loadParts()
         if (!alive.current) return
 
-        // Collect all meshes, sort by Y centroid ascending
+        // Sort CAD meshes by Y centroid → [bottom, upper, stem]
         const allMeshes = []
         gltf.scene.traverse(n => { if (n.isMesh) allMeshes.push(n.clone()) })
         allMeshes.sort((a, b) => {
-          const ya = new THREE.Box3().setFromObject(a).getCenter(new THREE.Vector3()).y
-          const yb = new THREE.Box3().setFromObject(b).getCenter(new THREE.Vector3()).y
-          return ya - yb
+          const ba = new THREE.Box3().setFromObject(a)
+          const bb = new THREE.Box3().setFromObject(b)
+          return ba.getCenter(new THREE.Vector3()).y - bb.getCenter(new THREE.Vector3()).y
         })
 
-        // Distribute meshes into 4 part groups by Y quartile
-        const n = allMeshes.length
+        // 3 CAD parts now: bottom, upper, stem
+        const cadIds = ['bottom', 'upper', 'stem']
         allMeshes.forEach((m, i) => {
-          const gi = Math.min(Math.floor((i / n) * 4), 3)
-          const pg = partGroups[gi]
-          const { accentColor, rough, metal } = pg.userData
+          const id = cadIds[i] || cadIds[cadIds.length - 1]
           m.castShadow = true; m.receiveShadow = true
+          const color = id === 'stem' ? stemColor : COLORS[id]
           m.material = new THREE.MeshStandardMaterial({
-            color: accentColor,
-            roughness: rough,
-            metalness: metal,
+            color,
+            roughness: id === 'upper' ? 0.32 : 0.55,
+            metalness: 0.04,
           })
-          pg.add(m)
+          partGroups[id].add(m)
         })
 
-        // Fit entire model: measure assembled bounding box
+        // Synthetic parts — placed where they would sit inside the assembled switch
+        const spring = makeSpring()
+        spring.position.set(0, -0.05, 0)  // centred, in middle vertically
+        partGroups.spring.add(spring)
+
+        const contact = makeContact()
+        contact.position.set(0.45, -0.05, 0.05)  // to right of spring
+        partGroups.contact.add(contact)
+
+        // Scale entire assembly to fit
         const box = new THREE.Box3().setFromObject(root)
         const size = box.getSize(new THREE.Vector3())
-        const maxD = Math.max(size.x, size.y, size.z)
-        const sf = 2.0 / maxD
-        root.scale.setScalar(sf)
+        root.scale.setScalar(1.35 / Math.max(size.x, size.y, size.z))
 
-        // Centre
+        // Centre on origin
         const box2 = new THREE.Box3().setFromObject(root)
-        const ctr = box2.getCenter(new THREE.Vector3())
-        root.position.sub(ctr)
+        root.position.sub(box2.getCenter(new THREE.Vector3()))
 
-      } catch(err) {
-        console.warn('GLB load error:', err)
-      }
+        // Initial 3/4 angle
+        root.rotation.y = Math.PI / 12
 
-      // Hover
-      let hovered = false
-      canvas.parentElement?.addEventListener('mouseenter', () => hovered = true)
-      canvas.parentElement?.addEventListener('mouseleave', () => hovered = false)
+      } catch (e) { console.warn('GLB failed:', e) }
 
-      // Resize
       const onResize = () => {
         const w2 = canvas.offsetWidth, h2 = canvas.offsetHeight
         renderer.setSize(w2, h2, false)
-        camera.aspect = w2/h2; camera.updateProjectionMatrix()
+        camera.aspect = w2 / h2
+        camera.updateProjectionMatrix()
       }
       window.addEventListener('resize', onResize)
 
-      // Animation phases: assembled → exploding → exploded → assembling → repeat
-      const HOLD_ASM  = 1.8  // seconds assembled before explode
-      const DUR_EXP   = 1.6  // explode duration
-      const HOLD_EXP  = 3.0  // hold exploded
-      const DUR_ASM   = 1.3  // assemble duration
-      let phase = 'assembled', timer = 0
+      const toScreen = pos3 => {
+        const v = pos3.clone().project(camera)
+        return { x: (v.x*.5+.5)*canvas.offsetWidth, y: (-v.y*.5+.5)*canvas.offsetHeight }
+      }
+
+      // ── SCROLL-DRIVEN EXPLODE ──
+      let explodeT = 0, smoothT = 0
+
+      const updateScroll = () => {
+        // Re-query each call in case the wrap mounts after canvas init
+        const wrapEl = document.querySelector('.hero-pin-wrap')
+        if (!wrapEl) return
+        const rect = wrapEl.getBoundingClientRect()
+        const winH = window.innerHeight
+        const scrolled = -rect.top
+        const total = rect.height - winH
+        if (total <= 0) return
+        const start = winH * 0.1
+        const raw = (scrolled - start) / Math.max(1, total - start)
+        explodeT = Math.max(0, Math.min(1, raw))
+      }
+      window.addEventListener('scroll', updateScroll, { passive: true })
+      window.addEventListener('resize', updateScroll, { passive: true })
+      // Run a few times after mount in case layout settles
+      updateScroll()
+      setTimeout(updateScroll, 100)
+      setTimeout(updateScroll, 500)
+      setTimeout(updateScroll, 1500)
 
       const clock = new THREE.Clock()
-
-      // Project 3D point to 2D canvas coords
-      const project = (pos3) => {
-        const v = pos3.clone().project(camera)
-        const rect = canvas.getBoundingClientRect()
-        return {
-          x: (v.x * 0.5 + 0.5) * rect.width,
-          y: (-v.y * 0.5 + 0.5) * rect.height,
-        }
-      }
 
       const animate = () => {
         raf = requestAnimationFrame(animate)
         if (!alive.current) return
-        const dt = clock.getDelta()
-        timer += dt
+        const dt = Math.min(clock.getDelta(), 0.05)
 
-        // Phase FSM
-        if      (phase === 'assembled'  && timer > HOLD_ASM) { phase='exploding'; timer=0 }
-        else if (phase === 'exploding'  && timer > DUR_EXP)  { phase='exploded';  timer=0 }
-        else if (phase === 'exploded'   && timer > HOLD_EXP) { phase='assembling';timer=0 }
-        else if (phase === 'assembling' && timer > DUR_ASM)  { phase='assembled'; timer=0 }
+        smoothT += (explodeT - smoothT) * 0.1
+        const exploded = smoothT > 0.5
 
-        const isExploding = phase === 'exploding' || phase === 'exploded'
-        const showLabels  = phase === 'exploded'
+        root.rotation.y += (exploded ? 0.04 : spin * 0.4) * dt
 
-        // Spin — slow during explode
-        root.rotation.y += (isExploding ? spin*0.08 : spin*0.5) * dt
+        PARTS.forEach((p, i) => {
+          const pg = partGroups[p.id]
+          if (!pg) return
+          // Top parts lead the explode
+          const orderFromTop = PARTS.length - 1 - i
+          const stagger = orderFromTop * 0.05
+          const localT = Math.max(0, Math.min(1, (smoothT - stagger) / Math.max(0.01, 1 - stagger)))
+          const eased = easeInOut(localT)
+          const target = p.explodeY * eased
+          pg.position.y += (target - pg.position.y) * 0.16
 
-        // Move each part
-        partGroups.forEach((pg, i) => {
-          const meta = pg.userData
-
-          // Stagger index: stem first out, bottom first back
-          const stagger = phase === 'exploding'
-            ? (partGroups.length - 1 - i) * 0.12  // top goes first
-            : i * 0.08                              // bottom comes back first
-
-          let t = 0
-          if (phase === 'exploding') {
-            t = easeOut(Math.max(0, Math.min(1, (timer - stagger) / DUR_EXP)))
-          } else if (phase === 'exploded') {
-            t = 1
-          } else if (phase === 'assembling') {
-            t = 1 - easeInOut(Math.max(0, Math.min(1, (timer - stagger) / DUR_ASM)))
-          }
-
-          const targetY = meta.explodeY * t
-          pg.position.y += (targetY - pg.position.y) * 0.18
-
-          // Subtle float when exploded
-          if (phase === 'exploded') {
-            pg.position.y += Math.sin(clock.elapsedTime * 0.6 + i * 1.2) * 0.003
+          if (exploded) {
+            pg.position.y += Math.sin(clock.elapsedTime * 0.5 + i * 1.2) * 0.0012
           }
         })
 
-        // Update labels
-        labelEls.forEach((el, i) => {
-          const pg = partGroups[i]
-          const worldPos = new THREE.Vector3()
-          pg.getWorldPosition(worldPos)
-          // Offset label to left side
-          const screenPos = project(worldPos)
-          const rect = canvas.getBoundingClientRect()
-          const cx = rect.width * 0.5
-          // Place on left side
-          el.style.left = `${Math.max(4, screenPos.x - 120)}px`
-          el.style.top  = `${screenPos.y - 8}px`
-          el.style.opacity = showLabels ? '1' : '0'
-          // Flip to right if part is on right half
-          if (screenPos.x > cx) {
-            el.style.flexDirection = 'row-reverse'
-          } else {
-            el.style.flexDirection = 'row'
-          }
+        // Labels
+        PARTS.forEach(p => {
+          const el = labelEls[p.id]
+          const pg = partGroups[p.id]
+          if (!el || !pg) return
+          const opacity = Math.max(0, (smoothT - 0.4) * 1.8)
+          el.style.opacity = Math.min(1, opacity).toFixed(2)
+          if (smoothT < 0.4) return
+          const box = new THREE.Box3().setFromObject(pg)
+          if (box.isEmpty()) return
+          const ctr = box.getCenter(new THREE.Vector3())
+          const s = toScreen(ctr)
+          el.style.left = '12px'
+          el.style.top  = `${(s.y - 9).toFixed(0)}px`
         })
 
         renderer.render(scene, camera)
@@ -259,13 +310,13 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xede9e2, spin = 0
 
       return () => {
         window.removeEventListener('resize', onResize)
-        labelContainer.remove()
+        window.removeEventListener('scroll', updateScroll)
+        overlay.remove()
       }
     }
 
     let cleanup
     init().then(fn => { cleanup = fn })
-
     return () => {
       alive.current = false
       cancelAnimationFrame(raf)

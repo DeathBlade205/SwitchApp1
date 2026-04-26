@@ -457,3 +457,42 @@ footer {
 @keyframes fadeUp { to { opacity: 1; transform: none; } }
 @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 @keyframes breathe { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+/* Nav scroll state — applied by GSAP ScrollTrigger after scroll */
+nav.nav-scrolled {
+  padding: 1rem 3.5rem;
+  background: rgba(247, 244, 239, 0.96);
+  border-bottom: 1px solid rgba(28, 25, 23, 0.08);
+  transition: padding 0.4s ease, background 0.4s ease, border 0.4s ease;
+}
+nav { transition: padding 0.4s ease; }
+
+/* Disable old reveal class transitions when GSAP takes over */
+.reveal { transition: none; }
+
+/* Ensure split-word reveal works inside titles without clipping descenders */
+.sec-title, .cta-title {
+  overflow: visible;
+}
+.sec-title > span, .cta-title > span {
+  /* These are the wrap spans created by splitWords */
+  line-height: 1.05;
+}
+
+/* Hero section relative for the scroll-driven 3D switch */
+.hero { position: relative; }
+
+/* ── Scroll-pinned hero wrapper ──
+   The wrapper is 300vh tall, providing scroll distance.
+   The .hero inside is sticky so it stays pinned while user scrolls.
+   After the wrapper ends, normal flow resumes. */
+.hero-pin-wrap {
+  height: 300vh;
+  position: relative;
+}
+.hero-pin-wrap .hero {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 100vh;
+}
