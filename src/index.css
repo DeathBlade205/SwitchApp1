@@ -479,20 +479,283 @@ nav { transition: padding 0.4s ease; }
   line-height: 1.05;
 }
 
-/* Hero section relative for the scroll-driven 3D switch */
+/* Hero — natural flow, no pin */
 .hero { position: relative; }
 
-/* ── Scroll-pinned hero wrapper ──
-   The wrapper is 300vh tall, providing scroll distance.
-   The .hero inside is sticky so it stays pinned while user scrolls.
-   After the wrapper ends, normal flow resumes. */
-.hero-pin-wrap {
-  height: 300vh;
-  position: relative;
+/* ═══════════════════════════════════════════════════════════
+   V2 STYLES — Senior review fixes
+   ═══════════════════════════════════════════════════════════ */
+
+/* HERO V2 — vertical side rail to anchor the right column */
+.hero-v2 .hero-right { position: relative; }
+
+.hero-side-rail {
+  position: absolute;
+  right: -2.5rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  transform-origin: right center;
+  display: flex;
+  gap: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  color: rgba(28, 25, 23, 0.45);
+  white-space: nowrap;
+  pointer-events: none;
 }
-.hero-pin-wrap .hero {
+
+/* PRODUCT CARD V2 — flagship variant + price subline */
+.prod-card { position: relative; transform: none !important; }
+
+.prod-pick {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 2;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  background: var(--gold, #b8985a);
+  padding: 0.35rem 0.7rem;
+  border-radius: 1px;
+}
+
+.prod-flagship {
+  outline: 1px solid rgba(184, 152, 90, 0.4);
+  outline-offset: -1px;
+}
+.prod-flagship .prod-canvas-wrap {
+  background: #25333a !important;
+}
+
+.prod-canvas-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  background: #2e3d45;
+  aspect-ratio: 1;
+}
+
+.prod-price-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.prod-price-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: rgba(28, 25, 23, 0.5);
+  margin-top: 0.25rem;
+}
+
+/* ANATOMY SECTION — gated explode */
+.anatomy {
+  height: 200vh;
+  position: relative;
+  background: var(--ivory-dark, #ede9e2);
+}
+.anatomy-sticky {
   position: sticky;
   top: 0;
   height: 100vh;
-  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.anatomy-inner {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 3.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 4rem;
+  align-items: center;
+}
+.anatomy-left { max-width: 440px; }
+.anatomy-right {
+  height: 80vh;
+  position: relative;
+}
+.anatomy-desc {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(28, 25, 23, 0.7);
+  margin: 1.5rem 0 2rem;
+  max-width: 38ch;
+}
+.anatomy-trigger {
+  margin-top: 0.5rem;
+}
+.anatomy-progress {
+  margin-top: 2rem;
+  max-width: 280px;
+}
+.anatomy-progress-bar {
+  height: 1px;
+  background: rgba(28, 25, 23, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+.anatomy-progress-fill {
+  height: 100%;
+  background: var(--gold, #b8985a);
+  transition: width 0.1s linear;
+}
+.anatomy-progress-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(28, 25, 23, 0.5);
+  margin-top: 0.6rem;
+}
+
+/* SPECS V2 — typographic, not tabular */
+.specs-v2 {
+  background: var(--ivory, #f7f4ef);
+  padding: 9rem 0 7rem;
+}
+.specs-inner-v2 {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 3.5rem;
+}
+.specs-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  margin-top: 4rem;
+  border-top: 1px solid rgba(28, 25, 23, 0.1);
+  padding-top: 4rem;
+}
+.spec-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.spec-block-num {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: clamp(3rem, 6vw, 5.2rem);
+  line-height: 0.9;
+  color: var(--ink, #1c1917);
+  letter-spacing: -0.02em;
+}
+.spec-block-unit {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold, #b8985a);
+  margin-top: 0.5rem;
+}
+.spec-block-label {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(28, 25, 23, 0.6);
+  margin-top: 0.85rem;
+  max-width: 22ch;
+}
+
+.specs-deep {
+  margin-top: 5rem;
+  border-top: 1px solid rgba(28, 25, 23, 0.1);
+  padding-top: 2rem;
+}
+.specs-deep summary {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(28, 25, 23, 0.55);
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.specs-deep summary::after {
+  content: '+';
+  font-size: 1rem;
+  font-family: serif;
+}
+.specs-deep[open] summary::after { content: '−'; }
+.specs-deep .specs-list {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.specs-deep .spec-row {
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(28, 25, 23, 0.06);
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 2rem;
+}
+.specs-deep .spec-key {
+  font-size: 0.8rem;
+  color: rgba(28, 25, 23, 0.55);
+}
+.specs-deep .spec-value {
+  font-size: 0.9rem;
+  color: var(--ink, #1c1917);
+}
+
+/* FOOTER V2 — collapsed */
+.footer-v2 {
+  background: var(--ivory-dark, #ede9e2);
+  padding: 4rem 3.5rem 2.5rem;
+  border-top: 1px solid rgba(28, 25, 23, 0.08);
+}
+.footer-v2-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.footer-v2 .footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--ink, #1c1917);
+}
+.footer-v2 .footer-tagline {
+  font-size: 0.85rem;
+  color: rgba(28, 25, 23, 0.55);
+  margin-bottom: 1.5rem;
+}
+.footer-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: rgba(28, 25, 23, 0.5);
+  flex-wrap: wrap;
+}
+.footer-meta a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-meta a:hover { color: var(--gold, #b8985a); }
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .anatomy-inner { grid-template-columns: 1fr; gap: 2rem; padding: 0 1.5rem; }
+  .anatomy-right { height: 50vh; }
+  .specs-grid-v2 { grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+  .specs-deep .specs-list { grid-template-columns: 1fr; }
+  .hero-side-rail { display: none; }
 }

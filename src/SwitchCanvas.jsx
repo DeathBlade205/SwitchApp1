@@ -89,7 +89,9 @@ function makeContact() {
   return g
 }
 
-export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0.3 }) {
+export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0.3, explodeProgress = 0, showLabels = true }) {
+  const progressRef = useRef(0)
+  progressRef.current = explodeProgress
   const canvasRef = useRef(null)
   const alive = useRef(true)
 
@@ -236,29 +238,8 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
         return { x: (v.x*.5+.5)*canvas.offsetWidth, y: (-v.y*.5+.5)*canvas.offsetHeight }
       }
 
-      // ── SCROLL-DRIVEN EXPLODE ──
-      let explodeT = 0, smoothT = 0
-
-      const updateScroll = () => {
-        // Re-query each call in case the wrap mounts after canvas init
-        const wrapEl = document.querySelector('.hero-pin-wrap')
-        if (!wrapEl) return
-        const rect = wrapEl.getBoundingClientRect()
-        const winH = window.innerHeight
-        const scrolled = -rect.top
-        const total = rect.height - winH
-        if (total <= 0) return
-        const start = winH * 0.1
-        const raw = (scrolled - start) / Math.max(1, total - start)
-        explodeT = Math.max(0, Math.min(1, raw))
-      }
-      window.addEventListener('scroll', updateScroll, { passive: true })
-      window.addEventListener('resize', updateScroll, { passive: true })
-      // Run a few times after mount in case layout settles
-      updateScroll()
-      setTimeout(updateScroll, 100)
-      setTimeout(updateScroll, 500)
-      setTimeout(updateScroll, 1500)
+      // Explode driven by external `explodeProgress` prop (read each frame from ref)
+      let smoothT = 0
 
       const clock = new THREE.Clock()
 
@@ -267,6 +248,7 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
         if (!alive.current) return
         const dt = Math.min(clock.getDelta(), 0.05)
 
+        const explodeT = progressRef.current
         smoothT += (explodeT - smoothT) * 0.1
         const exploded = smoothT > 0.5
 
@@ -293,6 +275,7 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
           const el = labelEls[p.id]
           const pg = partGroups[p.id]
           if (!el || !pg) return
+          if (!showLabels) { el.style.opacity = '0'; return }
           const opacity = Math.max(0, (smoothT - 0.4) * 1.8)
           el.style.opacity = Math.min(1, opacity).toFixed(2)
           if (smoothT < 0.4) return
@@ -310,7 +293,6 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
 
       return () => {
         window.removeEventListener('resize', onResize)
-        window.removeEventListener('scroll', updateScroll)
         overlay.remove()
       }
     }
