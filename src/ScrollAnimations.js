@@ -171,6 +171,6 @@ export function setupScrollAnimations() {
    * - Stats grid (replaced by specs typography)
    * - Spec rows accordion stagger (now hidden in <details>)
    * - Big section title parallax X drift — caused layout overflow
-   * - Product canvas SVG yPercent parallax — distracting
+   * - Product canvas SVG yPercent parallax — distracting.
    */
 }
