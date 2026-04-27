@@ -3,7 +3,7 @@ import Loader from './Loader'
 import HeroCanvas from './HeroCanvas'
 import SwitchCanvas from './SwitchCanvas'
 import SwitchIllustration from './SwitchIllustration'
-import { setupScrollAnimations } from './ScrollAnimations'
+import { setupScrollAnimations } from './scrollAnimations'
 import './index.css'
 
 export default function App() {
@@ -301,7 +301,7 @@ function AnatomySection() {
               bg={0xede9e2}
               spin={0.3}
               explodeProgress={activated ? progress : 0}
-              showLabels={activated && progress > 0.2}
+              showLabels={activated}
             />
           </div>
         </div>

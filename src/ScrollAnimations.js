@@ -3,26 +3,61 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Split text into wrapped words for masked reveal
+// Split text into wrapped words for masked reveal.
+// Walks child nodes so <br> and inline tags like <em>/<strong> are preserved.
 function splitWords(el) {
   if (!el || el.dataset.splitw === '1') return []
-  const words = el.textContent.split(/(\s+)/)
-  el.textContent = ''
   const out = []
-  words.forEach(w => {
-    if (/^\s+$/.test(w)) {
-      el.appendChild(document.createTextNode(w))
-    } else {
-      const wrap = document.createElement('span')
-      wrap.style.cssText = 'display:inline-block;overflow:hidden;vertical-align:top;'
-      const inner = document.createElement('span')
-      inner.style.cssText = 'display:inline-block;will-change:transform;'
-      inner.textContent = w
-      wrap.appendChild(inner)
-      el.appendChild(wrap)
-      out.push(inner)
+
+  const wrapWord = (text, italic = false) => {
+    if (!text) return null
+    const wrap = document.createElement('span')
+    wrap.style.cssText = 'display:inline-block;overflow:hidden;vertical-align:top;'
+    const inner = document.createElement(italic ? 'em' : 'span')
+    inner.style.cssText = 'display:inline-block;will-change:transform;'
+    inner.textContent = text
+    wrap.appendChild(inner)
+    out.push(inner)
+    return wrap
+  }
+
+  const processText = (text, parent, italic) => {
+    const tokens = text.split(/(\s+)/)
+    tokens.forEach(t => {
+      if (!t) return
+      if (/^\s+$/.test(t)) {
+        parent.appendChild(document.createTextNode(t))
+      } else {
+        const w = wrapWord(t, italic)
+        if (w) parent.appendChild(w)
+      }
+    })
+  }
+
+  // Build a fresh fragment by walking the original children
+  const frag = document.createDocumentFragment()
+  el.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      processText(node.textContent, frag, false)
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName.toLowerCase()
+      if (tag === 'br') {
+        frag.appendChild(document.createElement('br'))
+      } else if (tag === 'em' || tag === 'i') {
+        processText(node.textContent, frag, true)
+      } else if (tag === 'strong' || tag === 'b') {
+        const bWrap = document.createElement('strong')
+        processText(node.textContent, bWrap, false)
+        frag.appendChild(bWrap)
+      } else {
+        // Unknown inline element — flatten its text
+        processText(node.textContent, frag, false)
+      }
     }
   })
+
+  el.textContent = ''
+  el.appendChild(frag)
   el.dataset.splitw = '1'
   return out
 }
@@ -171,6 +206,6 @@ export function setupScrollAnimations() {
    * - Stats grid (replaced by specs typography)
    * - Spec rows accordion stagger (now hidden in <details>)
    * - Big section title parallax X drift — caused layout overflow
-   * - Product canvas SVG yPercent parallax — distracting.
+   * - Product canvas SVG yPercent parallax — distracting
    */
 }

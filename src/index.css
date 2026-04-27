@@ -98,8 +98,9 @@ nav {
 }
 .hero-left {
   display: flex; flex-direction: column;
-  justify-content: flex-end; padding: 3.5rem;
+  justify-content: center; padding: 3.5rem;
   padding-top: 9rem;
+  gap: 1.5rem;
 }
 .hero-right {
   position: relative; display: flex;
@@ -491,7 +492,7 @@ nav { transition: padding 0.4s ease; }
 
 .hero-side-rail {
   position: absolute;
-  right: -2.5rem;
+  right: 1.5rem;
   top: 50%;
   transform: translateY(-50%) rotate(90deg);
   transform-origin: right center;
@@ -500,9 +501,10 @@ nav { transition: padding 0.4s ease; }
   font-family: 'DM Mono', monospace;
   font-size: 0.62rem;
   letter-spacing: 0.3em;
-  color: rgba(28, 25, 23, 0.45);
+  color: rgba(28, 25, 23, 0.5);
   white-space: nowrap;
   pointer-events: none;
+  z-index: 3;
 }
 
 /* PRODUCT CARD V2 — flagship variant + price subline */
