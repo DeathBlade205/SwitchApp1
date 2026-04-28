@@ -157,6 +157,7 @@ export default function Loader({ onComplete }) {
                 transform: pressed ? 'translateY(9px)' : 'translateY(0)',
                 transition:'transform .07s cubic-bezier(.25,.46,.45,.94),box-shadow .07s',
                 cursor:'pointer', userSelect:'none', position:'relative', zIndex:2,
+                animation: phase === 'idle' ? 'keycapPulse 3s ease-in-out infinite' : 'none',
               }}
               role="button" tabIndex={0}
               onKeyDown={e => e.key === 'Enter' && trigger()}
@@ -173,7 +174,13 @@ export default function Loader({ onComplete }) {
             {phase === 'idle' ? 'Press to enter' : '· · ·'}
           </p>
 
-          <style>{`@keyframes breathe{0%,100%{opacity:.3}50%{opacity:1}}`}</style>
+          <style>{`
+            @keyframes breathe{0%,100%{opacity:.3}50%{opacity:1}}
+            @keyframes keycapPulse{
+              0%,100%{box-shadow:0 11px 0 #0a0806,0 16px 36px rgba(0,0,0,0.28),0 0 0 0 rgba(184,152,90,0)}
+              50%{box-shadow:0 11px 0 #0a0806,0 16px 36px rgba(0,0,0,0.28),0 0 28px 6px rgba(184,152,90,0.22)}
+            }
+          `}</style>
         </div>
       )}
     </>

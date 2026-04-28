@@ -63,6 +63,7 @@ function splitWords(el) {
 }
 
 export function setupScrollAnimations() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   ScrollTrigger.refresh()
 
   /* Section titles — masked word reveal. Kept. */
@@ -118,6 +119,7 @@ export function setupScrollAnimations() {
       duration: 1.2,
       ease: 'power4.out',
       stagger: 0.15,
+      clearProps: 'transform',   // release inline transform so CSS :hover can take over
       scrollTrigger: {
         trigger: productCards[0].parentElement,
         start: 'top 80%',

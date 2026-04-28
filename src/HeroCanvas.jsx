@@ -7,6 +7,7 @@ export default function HeroCanvas() {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const isMobile = window.matchMedia('(pointer: coarse)').matches
     const LINES = isMobile ? 8 : 20
     const PTS   = isMobile ? 60 : 120

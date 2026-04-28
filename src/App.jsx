@@ -2,18 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import Loader from './Loader'
 import HeroCanvas from './HeroCanvas'
 import SwitchCanvas from './SwitchCanvas'
-import SwitchIllustration from './SwitchIllustration'
+import SwitchIllustration from './SwitchIllustration.jsx'
+import AnatomySection from './AnatomySection'
 import { setupScrollAnimations } from './ScrollAnimations'
+import { SWITCHES, SPECS_HERO, SPECS, PROCESS } from './data'
 import './index.css'
 
 export default function App() {
   const [siteVisible, setSiteVisible] = useState(false)
-  const [skipLoader, setSkipLoader] = useState(false)
+  const [skipLoader,  setSkipLoader]  = useState(false)
+  const [menuOpen,    setMenuOpen]    = useState(false)
   const cursorRef = useRef(null)
 
-  // Auto-skip loader on returning visits
   useEffect(() => {
-    if (typeof window === 'undefined') return
     if (sessionStorage.getItem('nexus_seen') === '1') {
       setSkipLoader(true)
       setSiteVisible(true)
@@ -29,7 +30,7 @@ export default function App() {
       }
     }
     const over = e => {
-      const h = !!e.target.closest('button,a,.prod-card,.process-step,.nav-links a')
+      const h = !!e.target.closest('button,a,.prod-card,.process-step')
       cursorRef.current?.classList.toggle('hover', h)
     }
     window.addEventListener('mousemove', move)
@@ -52,6 +53,8 @@ export default function App() {
     return () => { obs.disconnect(); clearTimeout(t) }
   }, [siteVisible])
 
+  const closeMenu = () => setMenuOpen(false)
+
   return (
     <>
       <div id="cursor" ref={cursorRef} />
@@ -68,10 +71,31 @@ export default function App() {
             <a href="#specs">Specifications</a>
             <a href="#process">Craft</a>
           </div>
-          <button className="nav-cta">Shop</button>
+          <div className="nav-right">
+            <button className="nav-cta">Shop</button>
+            <button
+              className={`nav-burger ${menuOpen ? 'open' : ''}`}
+              aria-label="Toggle navigation"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(o => !o)}
+            >
+              <span /><span /><span />
+            </button>
+          </div>
         </nav>
 
-        {/* HERO — assembled switch, no scroll pin, no explode */}
+        {/* MOBILE MENU */}
+        {menuOpen && (
+          <div className="mobile-menu" role="dialog" aria-label="Navigation">
+            <a href="#collection" onClick={closeMenu}>Collection</a>
+            <a href="#anatomy"    onClick={closeMenu}>Anatomy</a>
+            <a href="#specs"      onClick={closeMenu}>Specifications</a>
+            <a href="#process"    onClick={closeMenu}>Craft</a>
+            <a href="#contact"    onClick={closeMenu}>Contact</a>
+          </div>
+        )}
+
+        {/* HERO */}
         <section className="hero hero-v2">
           <HeroCanvas />
           <div className="hero-inner">
@@ -87,10 +111,10 @@ export default function App() {
                 Built in Sydney, made for those who hear the difference.
               </p>
               <div className="hero-actions">
-                <button className="btn-primary" onClick={() => document.getElementById('collection')?.scrollIntoView({behavior:'smooth'})}>
+                <button className="btn-primary" onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })}>
                   Shop Collection
                 </button>
-                <button className="btn-ghost" onClick={() => document.getElementById('anatomy')?.scrollIntoView({behavior:'smooth'})}>
+                <button className="btn-ghost" onClick={() => document.getElementById('anatomy')?.scrollIntoView({ behavior: 'smooth' })}>
                   See Inside
                 </button>
               </div>
@@ -104,10 +128,7 @@ export default function App() {
 
             <div className="hero-right">
               <div className="hero-side-rail" aria-hidden="true">
-                <span>Nº</span>
-                <span>01</span>
-                <span>—</span>
-                <span>03</span>
+                <span>Nº</span><span>01</span><span>—</span><span>03</span>
               </div>
               <div className="hero-switch-wrap">
                 <SwitchCanvas variant="hero" bg={0xede9e2} spin={0.5} explodeProgress={0} showLabels={false} />
@@ -115,7 +136,7 @@ export default function App() {
               <p className="hero-label">Nexus Linear — Gold Edition</p>
             </div>
           </div>
-          <div className="hero-bleed">NEXUS</div>
+          <div className="hero-bleed" aria-hidden="true">NEXUS</div>
         </section>
 
         {/* COLLECTION */}
@@ -164,10 +185,10 @@ export default function App() {
           </div>
         </section>
 
-        {/* ANATOMY — gated explode, opt-in via button */}
+        {/* ANATOMY */}
         <AnatomySection />
 
-        {/* SPECS DEEP DIVE — typographic, not tabular */}
+        {/* SPECS */}
         <section id="specs" className="specs-section specs-v2">
           <div className="specs-inner-v2">
             <span className="sec-label reveal">Engineering</span>
@@ -217,25 +238,23 @@ export default function App() {
         {/* CTA */}
         <div className="cta-band">
           <h2 className="cta-title reveal">Feel the<br /><em>Difference.</em></h2>
-          <p className="cta-sub reveal">
-            500 units per variant. First drop ships March 2025.
-          </p>
-          <div className="reveal" style={{ display:'flex', gap:'1rem', justifyContent:'center' }}>
+          <p className="cta-sub reveal">500 units per variant. First drop ships March 2025.</p>
+          <div className="reveal" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
             <button className="btn-primary">Join the Waitlist</button>
           </div>
         </div>
 
-        {/* FOOTER — collapsed */}
+        {/* FOOTER */}
         <footer id="contact" className="footer-v2">
           <div className="footer-v2-inner">
             <p className="footer-logo">Nexus</p>
             <p className="footer-tagline">Precision switches. Sydney.</p>
             <div className="footer-meta">
-              <a href="#">hello@nexus.co</a>
+              <a href="mailto:hello@nexus.co">hello@nexus.co</a>
               <span>·</span>
               <a href="#">@nexus.switches</a>
               <span>·</span>
-              <span>© 2025</span>
+              <span>© 2025 Nexus</span>
             </div>
           </div>
         </footer>
@@ -244,135 +263,3 @@ export default function App() {
     </>
   )
 }
-
-// ── ANATOMY SECTION — gated explode ──
-function AnatomySection() {
-  const [progress, setProgress] = useState(0)
-  const [activated, setActivated] = useState(false)
-  const sectionRef = useRef(null)
-
-  useEffect(() => {
-    if (!activated) return
-    const onScroll = () => {
-      const el = sectionRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const winH = window.innerHeight
-      // Section is 200vh tall, sticky inner. Track scroll progress within section.
-      const scrolled = -rect.top
-      const total = rect.height - winH
-      if (total <= 0) return
-      const raw = scrolled / total
-      setProgress(Math.max(0, Math.min(1, raw)))
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [activated])
-
-  return (
-    <section id="anatomy" className="anatomy" ref={sectionRef}>
-      <div className="anatomy-sticky">
-        <div className="anatomy-inner">
-          <div className="anatomy-left">
-            <span className="sec-label reveal">Anatomy</span>
-            <h2 className="sec-title reveal">Five parts.<br /><em>One feeling.</em></h2>
-            <p className="anatomy-desc reveal">
-              Every Nexus switch is built from five precision-tuned components.
-              Each one chosen, lubed, and tested before assembly.
-            </p>
-            {!activated ? (
-              <button className="btn-primary anatomy-trigger" onClick={() => setActivated(true)}>
-                Disassemble →
-              </button>
-            ) : (
-              <div className="anatomy-progress">
-                <div className="anatomy-progress-bar">
-                  <div className="anatomy-progress-fill" style={{ width: `${progress*100}%` }} />
-                </div>
-                <p className="anatomy-progress-label">
-                  Scroll · {Math.round(progress*100)}%
-                </p>
-              </div>
-            )}
-          </div>
-          <div className="anatomy-right">
-            <SwitchCanvas
-              variant="hero"
-              bg={0xede9e2}
-              spin={0.3}
-              explodeProgress={activated ? progress : 0}
-              showLabels={activated}
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-const SWITCHES = [
-  {
-    variant: 'linear',
-    name: 'Nexus Linear',
-    tagline: 'For typists.',
-    type: 'Linear',
-    force: '45g',
-    travel: '4.0mm',
-    sound: 'Thock',
-    price: '$0.95 / switch',
-    setPrice: '$62',
-  },
-  {
-    variant: 'tactile',
-    flagship: true,
-    name: 'Nexus Tactile',
-    tagline: 'The Nexus signature.',
-    type: 'Tactile',
-    force: '55g',
-    travel: '4.0mm',
-    sound: 'Muted',
-    price: '$1.10 / switch',
-    setPrice: '$72',
-  },
-  {
-    variant: 'clicky',
-    name: 'Nexus Clicky',
-    tagline: 'For the office rebel.',
-    type: 'Clicky',
-    force: '60g',
-    travel: '4.0mm',
-    sound: 'Click',
-    price: '$1.05 / switch',
-    setPrice: '$68',
-  },
-]
-
-const SPECS_HERO = [
-  { num: '100',  unit: 'million', label: 'Rated keystrokes per switch' },
-  { num: '4.0',  unit: 'mm',      label: 'Total travel, zero pre-travel' },
-  { num: '500',  unit: 'units',   label: 'Per variant, per drop' },
-  { num: '48',   unit: 'hours',   label: 'Hand-lube time per batch' },
-]
-
-const SPECS = [
-  { key: 'Switch type', value: 'MX-compatible, 3-pin' },
-  { key: 'Housing material', value: 'Polycarbonate (top) / Nylon (bottom)' },
-  { key: 'Stem material', value: 'POM (Polyoxymethylene)' },
-  { key: 'Spring', value: 'Gold-plated stainless, single-stage' },
-  { key: 'Actuation force', value: '45g (Linear) / 55g (Tactile) / 60g (Clicky)' },
-  { key: 'Actuation point', value: '2.0mm' },
-  { key: 'Total travel', value: '4.0mm' },
-  { key: 'Pre-travel', value: '0mm' },
-  { key: 'Lube', value: 'Krytox 205g0, hand applied' },
-  { key: 'Filming', value: '0.3mm PTFE' },
-  { key: 'Rated lifespan', value: '100 million keystrokes' },
-  { key: 'Compatibility', value: 'MX footprint, universal' },
-]
-
-const PROCESS = [
-  { title: 'Sourced', body: 'Premium POM stems and polycarbonate housings from a single Chinese OEM. Every batch inspected.' },
-  { title: 'Disassembled', body: 'Each switch is opened. Springs sorted by weight variance, outliers discarded.' },
-  { title: 'Lubed & Filmed', body: 'Stems hand-lubed with Krytox 205g0. PTFE 0.3mm films eliminate housing wobble.' },
-  { title: 'Certified', body: 'Reassembled, tested for actuation consistency, packed in bespoke boxes.' },
-]
