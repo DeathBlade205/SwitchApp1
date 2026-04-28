@@ -21,6 +21,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    if (window.matchMedia('(pointer: coarse)').matches) return
     const move = e => {
       if (cursorRef.current) {
         cursorRef.current.style.left = e.clientX + 'px'
