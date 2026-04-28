@@ -170,7 +170,12 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
         if (!alive.current) return
 
         const allMeshes = []
-        gltf.scene.traverse(n => { if (n.isMesh) allMeshes.push(n.clone()) })
+        gltf.scene.traverse(n => {
+          if (!n.isMesh) return
+          const m = n.clone()
+          m.geometry = n.geometry.clone()  // own copy so cleanup doesn't corrupt the shared cache
+          allMeshes.push(m)
+        })
         allMeshes.sort((a, b) => {
           const ca = new THREE.Box3().setFromObject(a).getCenter(new THREE.Vector3())
           const cb = new THREE.Box3().setFromObject(b).getCenter(new THREE.Vector3())
