@@ -70,11 +70,18 @@ export default function HeroCanvas() {
     }
     if (!isMobile) window.addEventListener('mousemove', onMouse)
 
+    let isVisible = true
+    const visObs = new IntersectionObserver(
+      ([e]) => { isVisible = e.isIntersecting },
+      { rootMargin: '0px' }
+    )
+    visObs.observe(canvas)
+
     let raf
     const clock = new THREE.Clock()
     const animate = () => {
       raf = requestAnimationFrame(animate)
-      if (document.hidden) return
+      if (document.hidden || !isVisible) return
       const t = clock.getElapsedTime()
       lines.forEach(({ posArr, posAttr, yBase, offset, freq, amp, speed }) => {
         for (let i = 0; i < PTS; i++) {
@@ -94,6 +101,7 @@ export default function HeroCanvas() {
     animate()
 
     return () => {
+      visObs.disconnect()
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
       if (!isMobile) window.removeEventListener('mousemove', onMouse)

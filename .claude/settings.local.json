@@ -3,7 +3,11 @@
     "allow": [
       "Bash(node -e \"const fs=require\\('fs'\\); const f=fs.readFileSync\\('src/HeroCanvas.jsx','utf8'\\); console.log\\(f.includes\\('posAttr.needsUpdate'\\) ? 'PASS: needsUpdate' : 'FAIL'\\); console.log\\(f.includes\\('isMobile'\\) ? 'PASS: isMobile' : 'FAIL'\\); console.log\\(f.includes\\('document.hidden'\\) ? 'PASS: hidden' : 'FAIL'\\);\")",
       "Bash(node -e \"const fs=require\\('fs'\\); const f=fs.readFileSync\\('src/SwitchCanvas.jsx','utf8'\\); console.log\\(f.includes\\('PCFShadowMap'\\) ? 'PASS: PCFShadowMap' : 'FAIL'\\); console.log\\(f.includes\\('_box.setFromObject'\\) ? 'PASS: reuse _box' : 'FAIL'\\); console.log\\(f.includes\\('isMobile ? 512'\\) ? 'PASS: shadow size' : 'FAIL'\\); console.log\\(f.includes\\('document.hidden'\\) ? 'PASS: hidden' : 'FAIL'\\);\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "WebFetch(domain:switch-app1.vercel.app)",
+      "Bash(curl -s https://switch-app1.vercel.app/)",
+      "Bash(curl -s https://switch-app1.vercel.app/assets/index-g6jKqQCn.js)",
+      "Bash(curl -s \"https://switch-app1.vercel.app/assets/index-CvGssw7J.css\")"
     ]
   }
 }

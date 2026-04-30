@@ -65,19 +65,18 @@ function makeContact() {
   return g
 }
 
-export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0.3, explodeProgress = 0, showLabels = true }) {
-  const progressRef  = useRef(0)
-  const labelsRef    = useRef(true)
-  const stemMatRef   = useRef(null)   // for live variant swaps without scene rebuild
-  const spinRef      = useRef(spin)
+// fps: target frame rate — pass 30 for decorative/non-interactive canvases
+export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0.3, explodeProgress = 0, showLabels = true, fps = 60 }) {
+  const progressRef = useRef(0)
+  const labelsRef   = useRef(true)
+  const stemMatRef  = useRef(null)
+  const spinRef     = useRef(spin)
   progressRef.current = explodeProgress
   labelsRef.current   = showLabels
   spinRef.current     = spin
 
-  const canvasRef = useRef(null)
-  const alive     = useRef(true)
+  const containerRef = useRef(null)
 
-  // Swap stem colour without rebuilding the scene
   useEffect(() => {
     if (stemMatRef.current) {
       stemMatRef.current.color.setHex(STEM_OVERRIDE[variant] ?? STEM_OVERRIDE.hero)
@@ -85,29 +84,43 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
   }, [variant])
 
   useEffect(() => {
-    alive.current = true
-    const canvas = canvasRef.current
-    if (!canvas) return
-    let raf, renderer, pmrem, envTexture
+    const container = containerRef.current
+    if (!container) return
+
+    let cancelled = false
+    let raf = null
+
+    // Fresh canvas per mount — each invocation gets its own WebGL context,
+    // so StrictMode's double-mount never creates two renderers on the same canvas.
+    const canvas = document.createElement('canvas')
+    canvas.style.cssText = 'width:100%;height:100%;display:block;'
+    container.appendChild(canvas)
 
     const init = async () => {
-      const w = canvas.offsetWidth || 500
-      const h = canvas.offsetHeight || 500
+      let gltf = null
+      try { gltf = await loadParts() }
+      catch (e) { console.warn('GLB load failed:', e) }
+
+      if (cancelled) return
+
+      const w = canvas.offsetWidth || container.offsetWidth || 500
+      const h = canvas.offsetHeight || container.offsetHeight || 500
       const isMobile = window.matchMedia('(pointer: coarse)').matches || w < 640
 
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile })
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile })
       renderer.setSize(w, h, false)
       renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2))
       renderer.setClearColor(bg, 1)
       renderer.shadowMap.enabled = true
-      renderer.shadowMap.type = isMobile ? THREE.PCFShadowMap : THREE.VSMShadowMap
+      // PCFSoftShadowMap: no light-bleed artifacts, faster than VSM at equivalent res
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.toneMapping = THREE.ACESFilmicToneMapping
       renderer.toneMappingExposure = 1.2
 
       const scene = new THREE.Scene()
-      pmrem = new THREE.PMREMGenerator(renderer)
-      envTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+      const pmrem = new THREE.PMREMGenerator(renderer)
+      const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
       scene.environment = envTexture
 
       const camera = new THREE.PerspectiveCamera(28, w / h, 0.1, 50)
@@ -116,14 +129,13 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.6))
       const key = new THREE.DirectionalLight(0xffffff, 2.2)
-      key.position.set(2, 6, 4)
-      key.castShadow = true
-      key.shadow.mapSize.set(isMobile ? 512 : 2048, isMobile ? 512 : 2048)
+      key.position.set(2, 6, 4); key.castShadow = true
+      // 1024 on desktop (was 2048) — ~4× less shadow map memory & fill cost
+      key.shadow.mapSize.set(isMobile ? 512 : 1024, isMobile ? 512 : 1024)
       key.shadow.camera.left = -3; key.shadow.camera.right  =  3
       key.shadow.camera.top  =  3; key.shadow.camera.bottom = -3
       key.shadow.camera.near = 0.1; key.shadow.camera.far   = 20
-      key.shadow.radius = 8
-      if (!isMobile) key.shadow.blurSamples = 16
+      key.shadow.radius = 6
       key.shadow.bias = -0.0005
       scene.add(key)
       scene.add(Object.assign(new THREE.DirectionalLight(0xdde8f0, 1.0), { position: new THREE.Vector3(-5, 1, 3) }))
@@ -148,32 +160,28 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
 
       const overlay = document.createElement('div')
       overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;'
-      const wrap = canvas.parentElement
-      if (wrap) { wrap.style.position = 'relative'; wrap.appendChild(overlay) }
+      container.appendChild(overlay)
 
       const labelEls = {}
       PARTS.forEach(p => {
-        const el   = document.createElement('div')
-        el.style.cssText = `position:absolute;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity 0.5s ease;`
+        const el  = document.createElement('div')
+        el.style.cssText = 'position:absolute;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity 0.5s ease;'
         const line = document.createElement('div')
         line.style.cssText = 'width:48px;height:1px;background:#b8985a;flex-shrink:0;'
-        const txt  = document.createElement('span')
-        txt.style.cssText = `font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(28,25,23,0.78);white-space:nowrap;font-weight:500;`
+        const txt = document.createElement('span')
+        txt.style.cssText = "font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(28,25,23,0.78);white-space:nowrap;font-weight:500;"
         txt.textContent = p.label
         el.appendChild(line); el.appendChild(txt)
         overlay.appendChild(el)
         labelEls[p.id] = el
       })
 
-      try {
-        const gltf = await loadParts()
-        if (!alive.current) return
-
+      if (gltf) {
         const allMeshes = []
         gltf.scene.traverse(n => {
           if (!n.isMesh) return
           const m = n.clone()
-          m.geometry = n.geometry.clone()  // own copy so cleanup doesn't corrupt the shared cache
+          m.geometry = n.geometry.clone()
           allMeshes.push(m)
         })
         allMeshes.sort((a, b) => {
@@ -209,32 +217,37 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
           if (id === 'upper') m.renderOrder = 2
           partGroups[id].add(m)
         })
+      }
 
-        partGroups.spring.add(makeSpring())
-        partGroups.spring.position.set(0, 0, 0)
-        const contact = makeContact()
-        contact.scale.setScalar(1.2)
-        partGroups.contact.add(contact)
-        partGroups.contact.position.set(0.85, 0.05, 0.05)
+      partGroups.spring.add(makeSpring())
+      partGroups.spring.position.set(0, 0, 0)
+      const contact = makeContact()
+      contact.scale.setScalar(1.2)
+      partGroups.contact.add(contact)
+      partGroups.contact.position.set(0.85, 0.05, 0.05)
 
-        Object.values(partGroups).forEach(g => { g.userData.baseY = g.position.y })
+      Object.values(partGroups).forEach(g => { g.userData.baseY = g.position.y })
 
-        const box  = new THREE.Box3().setFromObject(root)
-        root.scale.setScalar(1.05 / Math.max(...box.getSize(new THREE.Vector3()).toArray()))
+      const box  = new THREE.Box3().setFromObject(root)
+      const size = box.getSize(new THREE.Vector3())
+      const maxDim = Math.max(size.x, size.y, size.z)
+      if (maxDim > 0) {
+        root.scale.setScalar(1.05 / maxDim)
         const box2 = new THREE.Box3().setFromObject(root)
         root.position.sub(box2.getCenter(new THREE.Vector3()))
-        root.rotation.y = Math.PI / 12
-      } catch (e) { console.warn('GLB load failed:', e) }
+      }
+      root.rotation.y = Math.PI / 12
 
       const onResize = () => {
         const w2 = canvas.offsetWidth, h2 = canvas.offsetHeight
+        if (!w2 || !h2) return
         renderer.setSize(w2, h2, false)
         camera.aspect = w2 / h2
         camera.updateProjectionMatrix()
       }
       window.addEventListener('resize', onResize)
+      onResize()
 
-      // Reusable objects — prevents per-frame GC pressure
       const _proj   = new THREE.Vector3()
       const _box    = new THREE.Box3()
       const _center = new THREE.Vector3()
@@ -244,12 +257,26 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
         return { x: (_proj.x*.5+.5)*canvas.offsetWidth, y: (-_proj.y*.5+.5)*canvas.offsetHeight }
       }
 
+      // Pause rendering when the canvas is scrolled out of view
+      let isVisible = true
+      const visObs = new IntersectionObserver(
+        ([e]) => { isVisible = e.isIntersecting },
+        { rootMargin: '0px' }
+      )
+      visObs.observe(container)
+
+      const frameMs = 1000 / fps
+      let lastRender = 0
       let smoothT = 0
       const clock = new THREE.Clock()
 
-      const animate = () => {
+      const animate = (timestamp = 0) => {
         raf = requestAnimationFrame(animate)
-        if (!alive.current || document.hidden) return
+        if (cancelled || document.hidden || !isVisible) return
+        // Frame-rate cap — skip render if we're ahead of target fps
+        if (timestamp - lastRender < frameMs) return
+        lastRender = timestamp
+
         const dt = Math.min(clock.getDelta(), 0.05)
 
         smoothT += (progressRef.current - smoothT) * Math.min(1, dt * 6)
@@ -288,27 +315,29 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
       animate()
 
       return () => {
+        visObs.disconnect()
         window.removeEventListener('resize', onResize)
         overlay.remove()
-        // Dispose all GPU resources
         scene.traverse(obj => {
           obj.geometry?.dispose()
           if (obj.material) [].concat(obj.material).forEach(m => m.dispose())
         })
-        envTexture?.dispose()
-        pmrem?.dispose()
+        envTexture.dispose()
+        pmrem.dispose()
+        renderer.dispose()
       }
     }
 
-    let cleanup
-    init().then(fn => { cleanup = fn })
-    return () => {
-      alive.current = false
-      cancelAnimationFrame(raf)
-      renderer?.dispose()
-      cleanup?.()
-    }
-  }, [bg])   // variant and spin read via refs — no scene rebuild needed
+    let sceneCleanup
+    init().then(fn => { sceneCleanup = fn })
 
-  return <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+    return () => {
+      cancelled = true
+      if (raf) cancelAnimationFrame(raf)
+      canvas.remove()
+      sceneCleanup?.()
+    }
+  }, [bg])
+
+  return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }} />
 }

@@ -100,7 +100,7 @@ export default function App() {
           <HeroCanvas />
           <div className="hero-inner">
             <div className="hero-left">
-              <p className="hero-eyebrow">Nº 01 — 2025 Collection</p>
+              <p className="hero-eyebrow">Nº 01 — 2026 Collection</p>
               <h1 className="hero-title">
                 <span className="ht"><span>The Art</span></span>
                 <span className="ht"><span>of the</span></span>
@@ -131,7 +131,7 @@ export default function App() {
                 <span>Nº</span><span>01</span><span>—</span><span>03</span>
               </div>
               <div className="hero-switch-wrap">
-                <SwitchCanvas variant="hero" bg={0xede9e2} spin={0.5} explodeProgress={0} showLabels={false} />
+                <SwitchCanvas variant="hero" bg={0xede9e2} spin={0.5} explodeProgress={0} showLabels={false} fps={30} />
               </div>
               <p className="hero-label">Nexus Linear — Gold Edition</p>
             </div>
@@ -238,7 +238,7 @@ export default function App() {
         {/* CTA */}
         <div className="cta-band">
           <h2 className="cta-title reveal">Feel the<br /><em>Difference.</em></h2>
-          <p className="cta-sub reveal">500 units per variant. First drop ships March 2025.</p>
+          <p className="cta-sub reveal">500 units per variant. First drop launching 2026.</p>
           <div className="reveal" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
             <button className="btn-primary">Join the Waitlist</button>
           </div>

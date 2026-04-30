@@ -2,9 +2,23 @@ import { useState, useEffect, useRef } from 'react'
 import SwitchCanvas from './SwitchCanvas'
 
 export default function AnatomySection() {
-  const [progress, setProgress]   = useState(0)
-  const [activated, setActivated] = useState(false)
+  const [progress, setProgress]     = useState(0)
+  const [activated, setActivated]   = useState(false)
+  const [canvasReady, setCanvasReady] = useState(false)
   const sectionRef = useRef(null)
+
+  // Mount the canvas only when the section is near the viewport —
+  // avoids creating a full Three.js scene on page load.
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setCanvasReady(true) },
+      { rootMargin: '400px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!activated) return
@@ -48,13 +62,15 @@ export default function AnatomySection() {
             )}
           </div>
           <div className="anatomy-right">
-            <SwitchCanvas
-              variant="hero"
-              bg={0xede9e2}
-              spin={0.3}
-              explodeProgress={activated ? progress : 0}
-              showLabels={activated}
-            />
+            {canvasReady && (
+              <SwitchCanvas
+                variant="hero"
+                bg={0xede9e2}
+                spin={0.3}
+                explodeProgress={activated ? progress : 0}
+                showLabels={activated}
+              />
+            )}
           </div>
         </div>
       </div>

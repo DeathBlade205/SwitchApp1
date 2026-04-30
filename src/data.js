@@ -2,7 +2,7 @@ export const SWITCHES = [
   {
     variant: 'linear',
     name: 'Nexus Linear',
-    tagline: 'For typists.',
+    tagline: 'Smooth from the first keystroke.',
     type: 'Linear',
     force: '45g',
     travel: '4.0mm',
@@ -14,7 +14,7 @@ export const SWITCHES = [
     variant: 'tactile',
     flagship: true,
     name: 'Nexus Tactile',
-    tagline: 'The Nexus signature.',
+    tagline: 'Satisfying bump. Total control.',
     type: 'Tactile',
     force: '55g',
     travel: '4.0mm',
@@ -25,7 +25,7 @@ export const SWITCHES = [
   {
     variant: 'clicky',
     name: 'Nexus Clicky',
-    tagline: 'For the office rebel.',
+    tagline: 'Unmistakable. Unapologetic.',
     type: 'Clicky',
     force: '60g',
     travel: '4.0mm',
@@ -58,7 +58,7 @@ export const SPECS = [
 ]
 
 export const PROCESS = [
-  { title: 'Sourced',        body: 'Premium POM stems and polycarbonate housings from a single Chinese OEM. Every batch inspected.' },
+  { title: 'Sourced',        body: 'Premium POM stems and polycarbonate housings from a single verified manufacturer. Every batch hand-inspected on arrival.' },
   { title: 'Disassembled',   body: 'Each switch is opened. Springs sorted by weight variance, outliers discarded.' },
   { title: 'Lubed & Filmed', body: 'Stems hand-lubed with Krytox 205g0. PTFE 0.3mm films eliminate housing wobble.' },
   { title: 'Certified',      body: 'Reassembled, tested for actuation consistency, packed in bespoke boxes.' },
