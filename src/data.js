@@ -1,5 +1,9 @@
+// A "set" is a 65-key build. setPriceNum drives the cart; price/setPrice are display strings.
+export const SET_KEYS = 65
+
 export const SWITCHES = [
   {
+    id: 'linear',
     variant: 'linear',
     name: 'Nexus Linear',
     tagline: 'Smooth from the first keystroke.',
@@ -9,8 +13,10 @@ export const SWITCHES = [
     sound: 'Thock',
     price: '$0.95 / switch',
     setPrice: '$62',
+    setPriceNum: 62,
   },
   {
+    id: 'tactile',
     variant: 'tactile',
     flagship: true,
     name: 'Nexus Tactile',
@@ -21,8 +27,10 @@ export const SWITCHES = [
     sound: 'Muted',
     price: '$1.10 / switch',
     setPrice: '$72',
+    setPriceNum: 72,
   },
   {
+    id: 'clicky',
     variant: 'clicky',
     name: 'Nexus Clicky',
     tagline: 'Unmistakable. Unapologetic.',
@@ -32,8 +40,15 @@ export const SWITCHES = [
     sound: 'Click',
     price: '$1.05 / switch',
     setPrice: '$68',
+    setPriceNum: 68,
   },
 ]
+
+export const FREE_SHIP_OVER = 150
+export const SHIP_FLAT = 9
+
+export const formatMoney = (n) =>
+  '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export const SPECS_HERO = [
   { num: '100',  unit: 'million', label: 'Rated keystrokes per switch' },

@@ -13,7 +13,14 @@ export default function HeroCanvas() {
     const PTS   = isMobile ? 60 : 120
     const N     = isMobile ? 120 : 400
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true })
+    let renderer
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true })
+    } catch (err) {
+      // WebGL unavailable (disabled / low-end device) — skip the decorative background
+      console.warn('HeroCanvas: WebGL unavailable, skipping background', err)
+      return
+    }
     renderer.setClearColor(0xede9e2, 1)
     renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2))
     const scene = new THREE.Scene()

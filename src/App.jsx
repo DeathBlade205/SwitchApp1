@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import Loader from './Loader'
 import HeroCanvas from './HeroCanvas'
-import SwitchCanvas from './SwitchCanvas'
+import HeroKeycaps from './HeroKeycaps'
 import SwitchIllustration from './SwitchIllustration.jsx'
 import AnatomySection from './AnatomySection'
+import ErrorBoundary from './ErrorBoundary'
+import Cart from './Cart'
+import { useCart } from './CartContext'
 import { setupScrollAnimations } from './ScrollAnimations'
 import { SWITCHES, SPECS_HERO, SPECS, PROCESS } from './data'
 import './index.css'
@@ -13,6 +16,7 @@ export default function App() {
   const [skipLoader,  setSkipLoader]  = useState(false)
   const [menuOpen,    setMenuOpen]    = useState(false)
   const cursorRef = useRef(null)
+  const cart = useCart()
 
   useEffect(() => {
     if (sessionStorage.getItem('nexus_seen') === '1') {
@@ -54,6 +58,11 @@ export default function App() {
   }, [siteVisible])
 
   const closeMenu = () => setMenuOpen(false)
+  const scrollTo = (id) => {
+    setMenuOpen(false)
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
+  const openCart = () => { setMenuOpen(false); cart.setOpen(true) }
 
   return (
     <>
@@ -72,7 +81,11 @@ export default function App() {
             <a href="#process">Craft</a>
           </div>
           <div className="nav-right">
-            <button className="nav-cta">Shop</button>
+            <button className="nav-cta" onClick={() => scrollTo('collection')}>Shop</button>
+            <button className="cart-btn" onClick={openCart} aria-label={`Open cart, ${cart.count} items`}>
+              <CartIcon />
+              {cart.count > 0 && <span className="cart-badge">{cart.count}</span>}
+            </button>
             <button
               className={`nav-burger ${menuOpen ? 'open' : ''}`}
               aria-label="Toggle navigation"
@@ -92,12 +105,13 @@ export default function App() {
             <a href="#specs"      onClick={closeMenu}>Specifications</a>
             <a href="#process"    onClick={closeMenu}>Craft</a>
             <a href="#contact"    onClick={closeMenu}>Contact</a>
+            <button className="mobile-menu-cart" onClick={openCart}>Cart ({cart.count})</button>
           </div>
         )}
 
         {/* HERO */}
         <section className="hero hero-v2">
-          <HeroCanvas />
+          <ErrorBoundary><HeroCanvas /></ErrorBoundary>
           <div className="hero-inner">
             <div className="hero-left">
               <p className="hero-eyebrow">Nº 01 — 2026 Collection</p>
@@ -130,10 +144,8 @@ export default function App() {
               <div className="hero-side-rail" aria-hidden="true">
                 <span>Nº</span><span>01</span><span>—</span><span>03</span>
               </div>
-              <div className="hero-switch-wrap">
-                <SwitchCanvas variant="hero" bg={0xede9e2} spin={0.5} explodeProgress={0} showLabels={false} fps={30} />
-              </div>
-              <p className="hero-label">Nexus Linear — Gold Edition</p>
+              <HeroKeycaps onPick={() => scrollTo('collection')} />
+              <p className="hero-label">Three switches · One standard</p>
             </div>
           </div>
           <div className="hero-bleed" aria-hidden="true">NEXUS</div>
@@ -173,10 +185,10 @@ export default function App() {
                     </div>
                     <div className="prod-price-row">
                       <div>
-                        <p className="prod-price">{sw.price}</p>
-                        <p className="prod-price-sub">{sw.setPrice} for a 65-key build</p>
+                        <p className="prod-price">{sw.setPrice}</p>
+                        <p className="prod-price-sub">{sw.price} · 65-key build</p>
                       </div>
-                      <button className="prod-buy">Notify Me</button>
+                      <button className="prod-buy" onClick={() => cart.add(sw.id)}>Add to Cart</button>
                     </div>
                   </div>
                 </div>
@@ -238,9 +250,10 @@ export default function App() {
         {/* CTA */}
         <div className="cta-band">
           <h2 className="cta-title reveal">Feel the<br /><em>Difference.</em></h2>
-          <p className="cta-sub reveal">500 units per variant. First drop launching 2026.</p>
-          <div className="reveal" style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button className="btn-primary">Join the Waitlist</button>
+          <p className="cta-sub reveal">500 units per variant. Free shipping over {`$${cart.FREE_SHIP_OVER}`}.</p>
+          <div className="reveal" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn-primary" onClick={() => scrollTo('collection')}>Shop the Collection</button>
+            <button className="btn-ghost" onClick={() => scrollTo('process')}>Our Process</button>
           </div>
         </div>
 
@@ -260,6 +273,35 @@ export default function App() {
         </footer>
 
       </div>
+
+      {/* CART DRAWER + CHECKOUT + TOAST */}
+      <Cart />
+      <Toast />
     </>
+  )
+}
+
+function CartIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+      <path d="M3 6h18" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  )
+}
+
+function Toast() {
+  const { toast, toastShow, setToastShow, setOpen } = useCart()
+  // toast content persists after hide, so text stays during the slide-out
+  return (
+    <div
+      className={`toast ${toastShow ? 'show' : ''}`}
+      onClick={() => { setToastShow(false); setOpen(true) }}
+    >
+      <span className="toast-check">✓</span>
+      <span><strong>{toast?.name}</strong> added to cart</span>
+      <span className="toast-view">View →</span>
+    </div>
   )
 }

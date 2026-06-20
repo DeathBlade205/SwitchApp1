@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import SwitchIllustration from './SwitchIllustration.jsx'
 
 const PARTS = [
   { id: 'lower',   label: 'PA66 Lower Cover',                   explodeY: -2.20 },
@@ -76,6 +77,7 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
   spinRef.current     = spin
 
   const containerRef = useRef(null)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     if (stemMatRef.current) {
@@ -107,7 +109,16 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
       const h = canvas.offsetHeight || container.offsetHeight || 500
       const isMobile = window.matchMedia('(pointer: coarse)').matches || w < 640
 
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile })
+      let renderer
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile })
+      } catch (err) {
+        // WebGL unavailable — drop the canvas and fall back to the SVG illustration
+        console.warn('SwitchCanvas: WebGL unavailable, using SVG fallback', err)
+        canvas.remove()
+        if (!cancelled) setFailed(true)
+        return
+      }
       renderer.setSize(w, h, false)
       renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2))
       renderer.setClearColor(bg, 1)
@@ -138,8 +149,9 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
       key.shadow.radius = 6
       key.shadow.bias = -0.0005
       scene.add(key)
-      scene.add(Object.assign(new THREE.DirectionalLight(0xdde8f0, 1.0), { position: new THREE.Vector3(-5, 1, 3) }))
-      scene.add(Object.assign(new THREE.DirectionalLight(0xffffff, 0.7), { position: new THREE.Vector3(0, -3, -4) }))
+      // Object3D.position is a read-only accessor — set components instead of reassigning
+      const fill = new THREE.DirectionalLight(0xdde8f0, 1.0); fill.position.set(-5, 1, 3); scene.add(fill)
+      const rim  = new THREE.DirectionalLight(0xffffff, 0.7); rim.position.set(0, -3, -4); scene.add(rim)
 
       const shadowPlane = new THREE.Mesh(
         new THREE.PlaneGeometry(20, 20),
@@ -339,5 +351,13 @@ export default function SwitchCanvas({ variant = 'hero', bg = 0xf0ece6, spin = 0
     }
   }, [bg])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }} />
+  return (
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+      {failed && (
+        <div className="canvas-fallback">
+          <SwitchIllustration variant={variant} darkBg={false} />
+        </div>
+      )}
+    </div>
+  )
 }
