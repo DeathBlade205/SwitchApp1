@@ -1,0 +1,29 @@
+{
+  "projectId": "f5727788-eeb4-4e4f-a9e6-29a752fc0de3",
+  "pkg": "nexus-commerce",
+  "globalName": "NexusCommerce",
+  "shape": "package",
+  "cssEntry": ".design-sync/.cache/css-entry.css",
+  "componentSrcMap": {
+    "AnatomySection": "src/AnatomySection.jsx",
+    "Cart": "src/Cart.jsx",
+    "Checkout": "src/Checkout.jsx",
+    "ErrorBoundary": "src/ErrorBoundary.jsx",
+    "HeroCanvas": "src/HeroCanvas.jsx",
+    "HeroKeycaps": "src/HeroKeycaps.jsx",
+    "Loader": "src/Loader.jsx",
+    "SwitchCanvas": "src/SwitchCanvas.jsx",
+    "SwitchIllustration": "src/SwitchIllustration.jsx"
+  },
+  "provider": {
+    "component": "CartProvider"
+  },
+  "overrides": {
+    "Cart": { "cardMode": "single", "viewport": "900x700", "primaryStory": "WithItems" },
+    "Checkout": { "cardMode": "single", "viewport": "1000x860" },
+    "Loader": { "cardMode": "single", "viewport": "900x700" },
+    "AnatomySection": { "cardMode": "column", "viewport": "1100x560" },
+    "HeroCanvas": { "cardMode": "single", "viewport": "900x500" }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
