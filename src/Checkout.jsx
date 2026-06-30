@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCart } from './CartContext'
 import { formatMoney } from './data'
+import { shopifyEnabled } from './shopify/client'
 
 const FIELDS = [
   { name: 'email',   label: 'Email',       placeholder: 'you@example.com',      col: 2, type: 'email' },
@@ -14,7 +15,7 @@ const FIELDS = [
 ]
 
 export default function Checkout({ onClose }) {
-  const { lines, subtotal, shipping, total, clear } = useCart()
+  const { lines, subtotal, shipping, total, clear, checkoutUrl } = useCart()
   const [form, setForm] = useState({})
   const [errors, setErrors] = useState({})
   const [placing, setPlacing] = useState(false)
@@ -25,6 +26,31 @@ export default function Checkout({ onClose }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, placing])
+
+  // Shopify mode: this app never touches card data — handing off to
+  // Shopify's hosted checkout is the standard, PCI-compliant way to take
+  // real payment from a custom storefront. clear() runs on return via
+  // CartProvider's restore effect finding an empty/completed cart next load.
+  useEffect(() => {
+    if (shopifyEnabled && checkoutUrl) window.location.href = checkoutUrl
+  }, [checkoutUrl])
+
+  if (shopifyEnabled) {
+    return (
+      <div className="checkout-overlay">
+        <div className="checkout-modal" role="dialog" aria-modal="true">
+          <div className="checkout-done">
+            <h2 className="checkout-done-title">Taking you to checkout…</h2>
+            <p className="checkout-done-sub">
+              {checkoutUrl
+                ? "Redirecting to Shopify's secure checkout."
+                : 'Preparing your order — one moment.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const update = (k, v) => {
     setForm(f => ({ ...f, [k]: v }))

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Shopify credentials
+.env
+
 # design-sync
 .ds-sync/
 ds-bundle/

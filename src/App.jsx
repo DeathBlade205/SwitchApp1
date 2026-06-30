@@ -8,7 +8,8 @@ import ErrorBoundary from './ErrorBoundary'
 import Cart from './Cart'
 import { useCart } from './CartContext'
 import { setupScrollAnimations } from './ScrollAnimations'
-import { SWITCHES, SPECS_HERO, SPECS, PROCESS } from './data'
+import { useProducts } from './hooks/useProducts'
+import { SPECS_HERO, SPECS, PROCESS } from './data'
 import './index.css'
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
   const [menuOpen,    setMenuOpen]    = useState(false)
   const cursorRef = useRef(null)
   const cart = useCart()
+  const { products } = useProducts()
 
   useEffect(() => {
     if (sessionStorage.getItem('nexus_seen') === '1') {
@@ -166,7 +168,7 @@ export default function App() {
             </div>
 
             <div className="products-grid">
-              {SWITCHES.map((sw, i) => (
+              {products.map((sw, i) => (
                 <div className={`prod-card reveal ${sw.flagship ? 'prod-flagship' : ''}`} key={i}>
                   {sw.flagship && <div className="prod-pick">Editor's Pick</div>}
                   <div className="prod-canvas-wrap">
@@ -188,7 +190,13 @@ export default function App() {
                         <p className="prod-price">{sw.setPrice}</p>
                         <p className="prod-price-sub">{sw.price} · 65-key build</p>
                       </div>
-                      <button className="prod-buy" onClick={() => cart.add(sw.id)}>Add to Cart</button>
+                      <button
+                        className="prod-buy"
+                        onClick={() => cart.add(sw.id)}
+                        disabled={sw.availableForSale === false}
+                      >
+                        {sw.availableForSale === false ? 'Sold Out' : 'Add to Cart'}
+                      </button>
                     </div>
                   </div>
                 </div>

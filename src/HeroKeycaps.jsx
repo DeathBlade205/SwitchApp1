@@ -1,4 +1,4 @@
-import { SWITCHES } from './data'
+import { useProducts } from './hooks/useProducts'
 
 // Per-variant accent (matches the switch colours used elsewhere in the app)
 const ACCENT = {
@@ -8,11 +8,12 @@ const ACCENT = {
 }
 
 export default function HeroKeycaps({ onPick }) {
+  const { products } = useProducts()
   return (
     <div className="keycaps">
       <p className="keycaps-prompt">Pick your sound</p>
       <div className="keycaps-row">
-        {SWITCHES.map((sw, i) => (
+        {products.map((sw, i) => (
           <button
             key={sw.id}
             type="button"
