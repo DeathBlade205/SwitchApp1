@@ -1,11 +1,5 @@
 import { useProducts } from './hooks/useProducts'
-
-// Per-variant accent (matches the switch colours used elsewhere in the app)
-const ACCENT = {
-  linear:  '#c94040',
-  tactile: '#4a7ab8',
-  clicky:  '#4a9e6a',
-}
+import { accentFor } from './theme'
 
 export default function HeroKeycaps({ onPick }) {
   const { products } = useProducts()
@@ -18,7 +12,7 @@ export default function HeroKeycaps({ onPick }) {
             key={sw.id}
             type="button"
             className="keycap"
-            style={{ '--accent': ACCENT[sw.variant], '--i': i }}
+            style={{ '--accent': accentFor(sw.variant), '--i': i }}
             onClick={() => onPick?.(sw.id)}
             aria-label={`${sw.name} — shop the collection`}
           >

@@ -46,7 +46,30 @@
       "Bash(git fetch *)",
       "Bash(git reset *)",
       "Bash(awk '{print $1, $NF}')",
-      "Bash(timeout 12 /snap/bin/chromium --headless=new --no-sandbox --window-size=300,200 --screenshot=/home/sadat/shots/t.png \"data:text/html,<h1>hi</h1>\")"
+      "Bash(timeout 12 /snap/bin/chromium --headless=new --no-sandbox --window-size=300,200 --screenshot=/home/sadat/shots/t.png \"data:text/html,<h1>hi</h1>\")",
+      "Bash(/home/sadat/.nvm/versions/node/v22.20.0/bin/node -v)",
+      "Bash(/home/sadat/.nvm/versions/node/v22.20.0/bin/npm i *)",
+      "Bash(/home/sadat/.nvm/versions/node/v22.20.0/bin/node .ds-sync/package-build.mjs --config .design-sync/config.json --node-modules ./node_modules --entry .design-sync/.cache/pkg-entry.mjs --out ./ds-bundle)",
+      "Bash(/home/sadat/.nvm/versions/node/v22.20.0/bin/npx playwright-core *)",
+      "Bash(/home/sadat/.nvm/versions/node/v22.20.0/bin/node .ds-sync/package-validate.mjs ./ds-bundle)",
+      "Bash(/home/sadat/.nvm/versions/node/v22.20.0/bin/node *)",
+      "Bash(ls ds-bundle/tokens)",
+      "Bash(ls ds-bundle/fonts)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(echo \"exit $?\")",
+      "Bash(timeout 20 /home/sadat/.nvm/versions/node/v22.20.0/bin/npx vite build)",
+      "Bash(curl -s http://localhost:5183/src/CartContext.jsx)",
+      "Bash(curl -s -o /dev/null -w \"App.jsx: %{http_code}\\\\n\" http://localhost:5183/src/App.jsx)",
+      "Bash(curl -s -o /dev/null -w \"Checkout.jsx: %{http_code}\\\\n\" http://localhost:5183/src/Checkout.jsx)",
+      "Bash(curl -s -o /dev/null -w \"HeroKeycaps.jsx: %{http_code}\\\\n\" http://localhost:5183/src/HeroKeycaps.jsx)",
+      "Bash(curl -s -o /dev/null -w \"hooks/useProducts.js: %{http_code}\\\\n\" http://localhost:5183/src/hooks/useProducts.js)",
+      "Bash(curl -s -o /dev/null -w \"shopify/client.js: %{http_code}\\\\n\" http://localhost:5183/src/shopify/client.js)",
+      "Bash(pkill -f \"vite --port 5183\")",
+      "Bash(pkill -f \"vite --port 5184\")",
+      "Bash(pnpm -v)",
+      "Bash(pkill -f \"vite --host\")",
+      "Bash(pkill -f \"vite --port 5185\")"
     ]
   }
 }
